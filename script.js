@@ -32,6 +32,7 @@ const previewTableHead = document.getElementById('preview-table-head');
 // Daftar ID input yang akan dipantau
 const inputIds = [
     { id: 'input-nama', label: 'Nama Lengkap' },
+    { id: 'input-tanggal', label: 'Tanggal' },
     { id: 'input-desa', label: 'Desa' },
     { id: 'input-umur', label: 'Umur' },
     { id: 'input-jk', label: 'Jenis Kelamin' },

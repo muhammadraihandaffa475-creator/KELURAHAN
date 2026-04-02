@@ -6,6 +6,9 @@
     <title>Ajukan Permohonan - Kecamatan Plemahan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
+    <!-- Library jsPDF untuk Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
@@ -126,6 +129,10 @@
                                 <input type="text" id="input-nama" required class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-200" placeholder="Nama Sesuai KTP">
                             </div>
                             <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Permohonan</label>
+                                <input type="date" id="input-tanggal" required class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-200">
+                            </div>
+                            <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Desa</label>
                                 <input type="text" id="input-desa" required class="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-200" placeholder="Nama Desa Domisili">
                             </div>
@@ -160,9 +167,14 @@
                                         Daftar Antrian
                                     </h3>
                                     <div class="flex gap-3">
-                                        <button type="button" id="btn-download-csv" class="inline-flex items-center px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-sm font-medium transition-colors border border-green-200 shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                            Download Excel
+                                        <!-- GANTI HREF DI BAWAH INI DENGAN LINK GOOGLE SPREADSHEET ANDA -->
+                                        <a id="btn-open-spreadsheet" href="https://docs.google.com/spreadsheets/d/1UwZLRj3mJNGR9d0fBFopiJ0VgSbmb8b1ivTUqzQZq4A/edit?hl=id&gid=0#gid=0" target="_blank" class="inline-flex items-center px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-sm font-medium transition-colors border border-green-200 shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                            Buka Spreadsheet
+                                        </a>
+                                        <button type="button" id="btn-download-pdf" class="inline-flex items-center px-3 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                            Export PDF
                                         </button>
                                         <button type="button" id="btn-reset-tabel" class="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors border border-red-200 shadow-sm">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -219,13 +231,16 @@
             const API_KEY = '$2a$10$h9UZB5ypIv9XPDOSdgWmeOAZ6QVatUxWmW/nXKiRB5Cq6CieMjRPa';
             const BIN_ID = '6965bfb8d0ea881f406809a4';
             const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+            // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+            const GOOGLE_SCRIPT_URL = ''; // <--- PASTE URL SCRIPT (https://script.google.com/...) DI SINI
 
             const serviceForm = document.getElementById('serviceForm');
             const btnTambahData = document.getElementById('btn-tambah-data');
             const btnTambahLagi = document.getElementById('btn-tambah-lagi');
             const btnKirim = document.getElementById('btn-kirim');
             const btnResetTabel = document.getElementById('btn-reset-tabel');
-            const btnDownloadCsv = document.getElementById('btn-download-csv');
+            const btnOpenSpreadsheet = document.getElementById('btn-open-spreadsheet');
+            const btnDownloadPdf = document.getElementById('btn-download-pdf');
             const inputSection = document.getElementById('input-section');
             const reviewSection = document.getElementById('review-section');
             const formSlider = document.getElementById('form-slider');
@@ -302,10 +317,11 @@
                     rows.push({
                         layanan: cells[1].innerText,
                         nama: cells[2].innerText,
-                        desa: cells[3].innerText,
-                        umur: cells[4].innerText,
-                        jk: cells[5].innerText,
-                        telepon: cells[6].innerText
+                        tanggal: cells[3].innerText,
+                        desa: cells[4].innerText,
+                        umur: cells[5].innerText,
+                        jk: cells[6].innerText,
+                        telepon: cells[7].innerText
                     });
                 });
                 localStorage.setItem('antrian_layanan', JSON.stringify(rows));
@@ -320,10 +336,11 @@
                     rows.push({
                         layanan: cells[1].innerText,
                         nama: cells[2].innerText,
-                        desa: cells[3].innerText,
-                        umur: cells[4].innerText,
-                        jk: cells[5].innerText,
-                        telepon: cells[6].innerText
+                        tanggal: cells[3].innerText,
+                        desa: cells[4].innerText,
+                        umur: cells[5].innerText,
+                        jk: cells[6].innerText,
+                        telepon: cells[7].innerText
                     });
                 });
 
@@ -342,6 +359,30 @@
                 }
             }
 
+            // --- FUNGSI KIRIM KE GOOGLE SHEETS ---
+            function submitToGoogleSheets(data) {
+                if (!GOOGLE_SCRIPT_URL) {
+                    alert("GAGAL: URL Google Script belum diisi di file permohonan.html. Silakan ikuti panduan untuk membuat dan memasukkan URL Web App.");
+                    return;
+                }
+                if (GOOGLE_SCRIPT_URL.includes("docs.google.com/spreadsheets")) {
+                    alert("SALAH URL: Anda memasukkan Link Spreadsheet. Yang dibutuhkan adalah Link Web App (berawalan https://script.google.com/...). Silakan Deploy ulang Apps Script Anda.");
+                    console.warn("URL Google Script belum diset dengan benar.");
+                    return;
+                }
+                
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Mode no-cors penting agar tidak diblokir browser
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(() => console.log("Data terkirim ke Google Sheets"))
+                .catch(error => console.error("Gagal kirim ke Google Sheets:", error));
+            }
+
             async function loadDataFromCloud() {
                 try {
                     const response = await fetch(API_URL, {
@@ -357,7 +398,7 @@
                     
                     if (Array.isArray(data)) {
                         tableBody.innerHTML = ''; // Reset tabel
-                        data.forEach(d => addRowToTable(d.layanan, d.nama, d.desa, d.umur, d.jk, d.telepon));
+                        data.forEach(d => addRowToTable(d.layanan, d.nama, d.tanggal, d.desa, d.umur, d.jk, d.telepon));
                         updateBadge();
                         updateFormHeight();
                     }
@@ -367,12 +408,13 @@
             }
 
             // --- FUNGSI RENDER TABEL ---
-            function addRowToTable(layanan, nama, desa, umur, jk, telepon) {
+            function addRowToTable(layanan, nama, tanggal, desa, umur, jk, telepon) {
                 const rowNumber = tableBody.querySelectorAll('tr.data-row').length + 1;
                 let newRowHTML = '<tr class="bg-white hover:bg-gray-50 transition-colors duration-200 data-row group">';
                 newRowHTML += `<td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm text-gray-500 text-center font-bold row-number">${rowNumber}</td>`;
                 newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${layanan}</td>`;
                 newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${nama}</td>`;
+                newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${tanggal}</td>`;
                 newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${desa}</td>`;
                 newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${umur}</td>`;
                 newRowHTML += `<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 font-medium">${jk}</td>`;
@@ -387,7 +429,7 @@
                 if (saved) {
                     try {
                         const rows = JSON.parse(saved);
-                        rows.forEach(d => addRowToTable(d.layanan, d.nama, d.desa, d.umur, d.jk, d.telepon));
+                        rows.forEach(d => addRowToTable(d.layanan, d.nama, d.tanggal, d.desa, d.umur, d.jk, d.telepon));
                         updateBadge();
                     } catch(e) { console.error("Gagal memuat data", e); }
                 }
@@ -395,7 +437,7 @@
 
             // 1. Inisialisasi Header Tabel Langsung
             // Tambahkan kolom No dan Aksi
-            const headers = ['No', 'Jenis Layanan', 'Nama Lengkap', 'Desa', 'Umur', 'Jenis Kelamin', 'No. Telepon', 'Aksi'];
+            const headers = ['No', 'Jenis Layanan', 'Nama Lengkap', 'Tanggal', 'Desa', 'Umur', 'Jenis Kelamin', 'No. Telepon', 'Aksi'];
             let headerHTML = '<tr class="border-b border-gray-200">';
             headers.forEach((h, index) => {
                 let widthClass = (index === 0 || index === headers.length - 1) ? 'w-16 text-center' : 'text-left';
@@ -442,6 +484,7 @@
                     // Ambil nilai dari form
                     const inputLayanan = document.getElementById('input-layanan');
                     const inputNama = document.getElementById('input-nama');
+                    const inputTanggal = document.getElementById('input-tanggal');
                     const inputDesa = document.getElementById('input-desa');
                     const inputUmur = document.getElementById('input-umur');
                     const inputJk = document.getElementById('input-jk');
@@ -449,13 +492,14 @@
 
                     const layanan = inputLayanan.value;
                     const nama = inputNama.value.trim();
+                    const tanggal = inputTanggal.value;
                     const desa = inputDesa.value.trim();
                     const umur = inputUmur.value.trim();
                     const jk = inputJk.value;
                     const telepon = inputTelepon.value.trim();
 
                     // Validasi input wajib
-                    if (!nama || !desa || !umur || !telepon) {
+                    if (!nama || !tanggal || !desa || !umur || !telepon) {
                         alert('Mohon lengkapi semua data sebelum melanjutkan.');
                         return;
                     }
@@ -467,14 +511,26 @@
                     }
 
                     // Tambahkan ke tabel dan simpan
-                    addRowToTable(layanan, nama, desa, umur, jk, telepon);
+                    addRowToTable(layanan, nama, tanggal, desa, umur, jk, telepon);
                     saveDataToLocal();
                     
                     // Simpan ke Cloud (Google Sheets)
                     saveDataToCloud();
+                    
+                    // KIRIM KE GOOGLE SHEETS (Baris Baru)
+                    submitToGoogleSheets({
+                        layanan: layanan,
+                        nama: nama,
+                        tanggal: tanggal,
+                        desa: desa,
+                        umur: umur,
+                        jk: jk,
+                        telepon: telepon
+                    });
 
                     // Reset Form agar siap untuk data berikutnya
                     inputNama.value = '';
+                    inputTanggal.value = '';
                     inputDesa.value = '';
                     inputUmur.value = '';
                     inputTelepon.value = '';
@@ -505,6 +561,58 @@
                 });
             }
 
+            // Event Listener untuk Tombol Download PDF
+            if (btnDownloadPdf) {
+                btnDownloadPdf.addEventListener('click', function() {
+                    const rows = tableBody.querySelectorAll('tr.data-row');
+                    if (rows.length === 0) {
+                        alert('Tabel antrian kosong. Silakan tambahkan data terlebih dahulu.');
+                        return;
+                    }
+
+                    // Menggunakan jsPDF
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // Header Dokumen
+                    doc.setFontSize(14);
+                    doc.text('PEMERINTAH KABUPATEN KEDIRI', 105, 15, { align: 'center' });
+                    doc.text('KECAMATAN PLEMAHAN', 105, 22, { align: 'center' });
+                    doc.setFontSize(12);
+                    doc.text('DAFTAR ANTRIAN PERMOHONAN LAYANAN', 105, 32, { align: 'center' });
+                    doc.line(15, 35, 195, 35); // Garis pemisah
+
+                    // Data Tabel
+                    const tableData = [];
+                    rows.forEach((row, index) => {
+                        const cells = row.querySelectorAll('td');
+                        // Mapping: 1=Layanan, 2=Nama, 3=Desa, 4=Umur, 5=JK, 6=Telepon
+                        tableData.push([
+                            index + 1,
+                            cells[1].innerText,
+                            cells[2].innerText,
+                            cells[3].innerText,
+                            cells[4].innerText,
+                            cells[5].innerText,
+                            cells[6].innerText,
+                            cells[7].innerText
+                        ]);
+                    });
+
+                    doc.autoTable({
+                        startY: 40,
+                        head: [['No', 'Layanan', 'Nama', 'Tanggal', 'Desa', 'Umur', 'JK', 'No. HP']],
+                        body: tableData,
+                        theme: 'grid',
+                        headStyles: { fillColor: [22, 163, 74] }, // Warna hijau header
+                        styles: { fontSize: 9 }
+                    });
+
+                    // Simpan PDF
+                    doc.save(`Antrian_Layanan_${new Date().toISOString().slice(0,10)}.pdf`);
+                });
+            }
+
             // Event Listener untuk Tombol Reset Tabel
             if (btnResetTabel) {
                 btnResetTabel.addEventListener('click', function() {
@@ -518,42 +626,6 @@
                         updateBadge();
                         updateFormHeight();
                     }
-                });
-            }
-
-            // Event Listener untuk Tombol Download CSV
-            if (btnDownloadCsv) {
-                btnDownloadCsv.addEventListener('click', function() {
-                    const rows = tableBody.querySelectorAll('tr.data-row');
-                    if (rows.length === 0) {
-                        alert('Tabel antrian kosong. Silakan isi formulir dan klik "Tambahkan ke Tabel Antrian" terlebih dahulu.');
-                        return;
-                    }
-
-                    let csv = [];
-                    // Header (Tanpa kolom Aksi)
-                    const headers = ['No', 'Jenis Layanan', 'Nama Lengkap', 'Desa', 'Umur', 'Jenis Kelamin', 'No. Telepon'];
-                    csv.push(headers.map(h => `"${h}"`).join(","));
-
-                    // Data
-                    rows.forEach(row => {
-                        const cols = row.querySelectorAll('td');
-                        let rowData = [];
-                        // Ambil kolom 0 sampai 6 (abaikan kolom Aksi di index 7)
-                        for (let i = 0; i < 7; i++) {
-                            rowData.push('"' + cols[i].innerText.trim().replace(/"/g, '""') + '"');
-                        }
-                        csv.push(rowData.join(","));
-                    });
-
-                    const csvFile = new Blob(["\ufeff" + csv.join("\r\n")], {type: "text/csv;charset=utf-8"});
-                    const downloadLink = document.createElement("a");
-                    downloadLink.download = "antrian-permohonan.csv";
-                    downloadLink.href = window.URL.createObjectURL(csvFile);
-                    downloadLink.style.display = "none";
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
                 });
             }
 
@@ -576,10 +648,11 @@
                         
                         message += `*${index + 1}. ${cells[1].innerText}*%0A`;
                         message += `   - Nama: ${cells[2].innerText}%0A`;
-                        message += `   - Desa: ${cells[3].innerText}%0A`;
-                        message += `   - Umur: ${cells[4].innerText} tahun%0A`;
-                        message += `   - JK: ${cells[5].innerText}%0A`;
-                        message += `   - No. HP: ${cells[6].innerText}%0A%0A`;
+                        message += `   - Tanggal: ${cells[3].innerText}%0A`;
+                        message += `   - Desa: ${cells[4].innerText}%0A`;
+                        message += `   - Umur: ${cells[5].innerText} tahun%0A`;
+                        message += `   - JK: ${cells[6].innerText}%0A`;
+                        message += `   - No. HP: ${cells[7].innerText}%0A%0A`;
                     });
 
                     message += "Mohon segera diproses. Terima kasih.";

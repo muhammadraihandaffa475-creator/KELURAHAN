@@ -362,7 +362,7 @@
             // --- FUNGSI KIRIM KE GOOGLE SHEETS ---
             function submitToGoogleSheets(data) {
                 if (!GOOGLE_SCRIPT_URL) {
-                    alert("GAGAL: URL Google Script belum diisi di file permohonan.html. Silakan ikuti panduan untuk membuat dan memasukkan URL Web App.");
+                    console.warn("URL Google Script belum diisi. Data ditambahkan secara lokal namun belum dikirim ke Google Sheets.");
                     return;
                 }
                 if (GOOGLE_SCRIPT_URL.includes("docs.google.com/spreadsheets")) {

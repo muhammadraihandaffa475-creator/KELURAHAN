@@ -228,11 +228,29 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // --- KONFIGURASI FIREBASE ---
+        // Ganti konfigurasi di bawah ini dengan milik Anda dari Firebase Console
+        const firebaseConfig = {
+            apiKey: "API_KEY_FIREBASE_ANDA",
+            authDomain: "PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com", // WAJIB SESUAI PROJECT ANDA
+            projectId: "PROJECT_ID",
+            storageBucket: "PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         document.addEventListener('DOMContentLoaded', function() {
             // --- KONFIGURASI JSONBIN.IO ---
-            const API_KEY = '$2a$10$h9UZB5ypIv9XPDOSdgWmeOAZ6QVatUxWmW/nXKiRB5Cq6CieMjRPa';
-            const BIN_ID = '6965bfb8d0ea881f406809a4';
+            const API_KEY = '$2a$10$yAN2ZQVZVi.5c9OBF5Csc.Dar8IsaSQ.B2c8oMbY6q/wSW0Kpu7CO';
+            const BIN_ID = '69d70e6e36566621a892442d';
             const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
             // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
             const GOOGLE_SCRIPT_URL = ''; // <--- PASTE URL SCRIPT (https://script.google.com/...) DI SINI
@@ -370,8 +388,11 @@
                         body: JSON.stringify(rows)
                     });
                     console.log("Data berhasil disimpan ke JSONBin");
+                await set(ref(db, 'antrian_layanan'), rows);
+                console.log("Data berhasil disimpan ke Firebase");
                 } catch (error) {
                     console.error("Gagal menyimpan data:", error);
+                console.error("Gagal menyimpan data ke Firebase:", error);
                 }
             }
 
@@ -400,11 +421,6 @@
             }
 
             async function loadDataFromCloud() {
-                // Prioritaskan Local Storage. Jika local sudah ada (termasuk kosong setelah di-reset),
-                // jangan fetch dari cloud agar data yang sudah dihapus tidak muncul lagi akibat delay cloud.
-                if (localStorage.getItem('antrian_layanan') !== null) {
-                    return;
-                }
                 try {
                     const response = await fetch(API_URL, {
                         method: 'GET',
@@ -744,7 +760,10 @@
             }
 
             // Load data saat halaman pertama kali dibuka
-            loadDataFromLocal();
+            loadDataFromCloud().catch(() => {
+                console.log("Gagal memuat dari server, menggunakan data lokal sementara.");
+                loadDataFromLocal();
+            });
             loadDataFromCloud();
             updateFormHeight();
         });

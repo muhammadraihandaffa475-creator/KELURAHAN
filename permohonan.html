@@ -249,7 +249,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             // --- KONFIGURASI JSONBIN.IO ---
-            const API_KEY = '$2a$10$yAN2ZQVZVi.5c9OBF5Csc.Dar8IsaSQ.B2c8oMbY6q/wSW0Kpu7CO';
+            const API_KEY = '$2a$10$h08CHo/2k.EXdddjlF1Jj.wgLWCrn5ygHtQqUzOj7fZxG5RFYTYl6';
             const BIN_ID = '69d70e6e36566621a892442d';
             const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
             // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE SCRIPT ANDA
@@ -378,7 +378,7 @@
                 });
 
                 try {
-                    await fetch(API_URL, {
+                    const response = await fetch(API_URL, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -387,12 +387,20 @@
                         },
                         body: JSON.stringify(rows)
                     });
-                    console.log("Data berhasil disimpan ke JSONBin");
-                await set(ref(db, 'antrian_layanan'), rows);
-                console.log("Data berhasil disimpan ke Firebase");
+                    
+                    if (response.ok) {
+                        console.log("Data berhasil disimpan ke JSONBin");
+                    } else {
+                        console.error("Gagal simpan ke JSONBin. Cek API Key Anda. Status:", response.status);
+                    }
+
+                    // Hanya jalankan Firebase jika kodenya sudah diisi yang asli (bukan dummy)
+                    if (firebaseConfig.apiKey !== "API_KEY_FIREBASE_ANDA") {
+                        await set(ref(db, 'antrian_layanan'), rows);
+                        console.log("Data berhasil disimpan ke Firebase");
+                    }
                 } catch (error) {
-                    console.error("Gagal menyimpan data:", error);
-                console.error("Gagal menyimpan data ke Firebase:", error);
+                    console.error("Gagal menyimpan data ke Cloud:", error);
                 }
             }
 
@@ -422,12 +430,18 @@
 
             async function loadDataFromCloud() {
                 try {
-                    const response = await fetch(API_URL, {
+                    const response = await fetch(`${API_URL}/latest`, {
                         method: 'GET',
                         headers: {
                             'X-Master-Key': API_KEY
-                        }
+                        },
+                        cache: 'no-store' // Mencegah browser menampilkan data usang (cache)
                     });
+
+                    if (!response.ok) {
+                        throw new Error("Gagal mengambil data dari server. Status: " + response.status);
+                    }
+
                     const result = await response.json();
                     
                     // JSONBin v3 menyimpan data di dalam properti .record
@@ -441,6 +455,7 @@
                     }
                 } catch (error) {
                     console.error("Gagal memuat data:", error);
+                    throw error; // Lempar error agar data lokal (Local Storage) bisa dipanggil sebagai cadangan
                 }
             }
 
@@ -764,7 +779,6 @@
                 console.log("Gagal memuat dari server, menggunakan data lokal sementara.");
                 loadDataFromLocal();
             });
-            loadDataFromCloud();
             updateFormHeight();
         });
     </script>

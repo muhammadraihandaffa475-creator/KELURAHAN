@@ -123,3 +123,39 @@ if (btnNext && btnBack && inputSection && reviewSection) {
         inputSection.classList.remove('hidden');
     });
 }
+
+// Script untuk slider navigasi vertikal manual
+document.querySelectorAll('.vertical-slider-container').forEach(container => {
+    const track = container.querySelector('.vertical-slider-track');
+    const upBtn = container.querySelector('.v-slide-up');
+    const downBtn = container.querySelector('.v-slide-down');
+    
+    if (!track || !upBtn || !downBtn) return;
+
+    let currentIndex = 0;
+    const items = track.querySelectorAll('.tab');
+    const totalItems = items.length;
+    const itemHeight = 88 + 10; // Tinggi tombol (88px) + margin-bottom (10px)
+
+    function updateSlider() {
+        track.style.transform = `translateY(-${currentIndex * itemHeight}px)`;
+        upBtn.disabled = currentIndex === 0;
+        downBtn.disabled = currentIndex >= totalItems - 1;
+    }
+
+    upBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateSlider();
+        }
+    });
+
+    downBtn.addEventListener('click', () => {
+        if (currentIndex < totalItems - 1) {
+            currentIndex++;
+            updateSlider();
+        }
+    });
+
+    updateSlider(); // Inisialisasi posisi dan status tombol
+});
